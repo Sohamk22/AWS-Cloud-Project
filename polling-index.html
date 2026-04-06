@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CS Voting Fun!</title>
+  <style>
+    body { background: #252850; color: #fff; font-family: 'Segoe UI', Arial; min-height: 100vh; margin: 0; }
+    .wrap { max-width: 480px; margin: 3em auto; background: #20253c; border-radius: 18px; box-shadow: 0 0 20px #0005; padding: 2em; }
+    h1 { color: #72efff; text-align: center; }
+    .question { font-size: 1.2em; margin: 1em 0; color: #ffe052; }
+    label { display: block; margin-bottom: 1.1em; font-size: 1.08em; }
+    .btn { background: #72efff; color: #112; border: none; border-radius: 8px; padding: 0.6em 2em; font-weight: bold; font-size: 1em; cursor: pointer; margin-top: .5em; }
+    .btn:hover { background: #ffe052; color: #252850; }
+    #msg { margin-top: 1em; min-height: 1.5em; font-weight: bold; }
+    table { width: 100%; margin-top: 1em; border-collapse: collapse; }
+    th, td { padding: 0.7em 1.2em; }
+    th { background: #72efff; color: #20253c;}
+    tr:nth-child(even) { background: #2a2e5a;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>CS Student Poll 🖥️🤓</h1>
+    <div class="question">If you had to TA one of these, which would you choose?</div>
+    <form id="voteForm">
+      <label><input type="radio" name="candidate" value="Data Structures" required> Data Structures</label>
+      <label><input type="radio" name="candidate" value="Cloud Computing"> Cloud Computing</label>
+      <label><input type="radio" name="candidate" value="Machine Learning"> Machine Learning</label>
+      <label><input type="radio" name="candidate" value="DevOps"> DevOps</label>
+      <label><input type="radio" name="candidate" value="Cybersecurity"> Cybersecurity</label>
+      <button class="btn" type="submit">Vote!</button>
+    </form>
+    <div id="msg"></div>
+    <hr>
+    <button class="btn" onclick="fetchResults()">Show Live Results</button>
+    <div id="results"></div>
+  </div>
+  <script>
+    const VOTE_ENDPOINT = "https://23tl69dm9c.execute-api.us-east-1.amazonaws.com/vote";
+    const RESULTS_ENDPOINT = "https://23tl69dm9c.execute-api.us-east-1.amazonaws.com/results";
+
+    document.getElementById('voteForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const candidate = document.querySelector('input[name="candidate"]:checked').value;
+      document.getElementById("msg").style.color="#fff";
+      document.getElementById("msg").innerText = "Submitting...";
+      try {
+        const res = await fetch(VOTE_ENDPOINT, {
+          method: "POST", headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({candidate})
+        });
+        if(res.ok) {
+          document.getElementById("msg").style.color = "#72efff";
+          document.getElementById("msg").innerText = "Thank you for voting! 🎉";
+          fetchResults();
+        } else throw "";
+      } catch {
+        document.getElementById("msg").style.color = "#fd6464";
+        document.getElementById("msg").innerText = "Vote failed!";
+      }
+    };
+
+    async function fetchResults() {
+      document.getElementById("results").innerHTML = "Loading...";
+      try {
+        const res = await fetch(RESULTS_ENDPOINT);
+        const data = await res.json();
+        let html = '<table><tr><th>Choice</th><th>Votes</th></tr>';
+        for (const [k, v] of Object.entries(data)) html += `<tr><td>${k}</td><td>${v}</td></tr>`;
+        html += "</table>";
+        document.getElementById("results").innerHTML = html;
+      } catch {
+        document.getElementById("results").innerHTML = "Could not load results.";
+      }
+    }
+    fetchResults();
+  </script>
+</body>
+</html>
